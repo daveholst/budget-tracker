@@ -1,0 +1,3 @@
+-[] Manifest
+-[] Register Service Working
+-[] sync DB to indexDB?
