@@ -49,15 +49,30 @@ async function setupLocalDB() {
     },
   });
   // see whats on the db?
-  const allTransactions = await db.getAll('transactions');
-  console.log(allTransactions);
-
-  //     if (localTransactions.result.length < remoteTransactions.length) {
-  //       console.log('more records on remote, updating...');
-  //     }
-  //     if (localTransactions.result.length > remoteTransactions.length) {
-  //       console.log('more records on local, updating...');
-  //     }
+  const allLocalTransactions = await db.getAll('transactions');
+  const allRemoteTransactions = transactions;
+  console.log(allRemoteTransactions);
+  if (allLocalTransactions.length < allRemoteTransactions.length) {
+    // update localDB to reflect remote
+    console.log('more records on remote, updating...');
+    // clear db out
+    await db.clear('transactions');
+    // add new data back in
+    allRemoteTransactions.forEach(async (transaction) => {
+      await db.add('transactions', transaction);
+    });
+  }
+  if (allLocalTransactions.length > allRemoteTransactions.length) {
+    console.log('more records on local, updating...');
+    // fetch('/api/transaction/bulk', {
+    //   method: 'POST',
+    //   body: JSON.stringify(transaction),
+    //   headers: {
+    //     Accept: 'application/json, text/plain, */*',
+    //     'Content-Type': 'application/json',
+    //   },
+    // });
+  }
 }
 
 function populateTotal() {
