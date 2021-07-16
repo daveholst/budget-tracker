@@ -1,6 +1,9 @@
 let transactions = [];
 let myChart;
 
+// setup indexDB database
+
+
 fetch('/api/transaction')
   .then((response) => response.json())
   .then((data) => {
@@ -15,33 +18,6 @@ fetch('/api/transaction')
 
 // build indexDB and sync?
 // TODO: inital sync if available?
-// function setupLocalDB() {
-//   const request = indexedDB.open('transactionsDB', 1);
-//   // build database if doesnt exist
-//   request.onupgradeneeded = (e) => {
-//     const db = e.target.result;
-//     db.createObjectStore('transactions', { autoIncrement: true });
-//   };
-//   // propgate with information off remote database
-//   request.onsuccess = (e) => {
-//     const db = e.target.result;
-//     // check local vs remote.
-//     const remoteTransactions = transactions;
-
-//     const localTransactions = db
-//       .transaction(['transactions'])
-//       .objectStore(['transactions'])
-//       .getAll();
-//     console.log('remote copy: ', remoteTransactions);
-//     console.log('local copy: ', localTransactions);
-//     if (localTransactions.result.length < remoteTransactions.length) {
-//       console.log('more records on remote, updating...');
-//     }
-//     if (localTransactions.result.length > remoteTransactions.length) {
-//       console.log('more records on local, updating...');
-//     }
-//   };
-// }
 async function setupLocalDB() {
   const db = await idb.openDB('transactionsDB', 1, {
     upgrade(db) {
@@ -73,6 +49,12 @@ async function setupLocalDB() {
     //   },
     // });
   }
+}
+
+// function to write to local if API unavailable!
+async function saveRecord(transaction) {
+  await db.add('transactions', transaction);
+  console.log('added transaction in offline mode');
 }
 
 function populateTotal() {
