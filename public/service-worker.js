@@ -13,7 +13,6 @@ const CACHE_NAME = 'static-files-cache-v1';
 const API_CACHE_NAME = 'api-cache-v1';
 
 // install caching
-
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {

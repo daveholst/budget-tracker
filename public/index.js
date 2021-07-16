@@ -1,27 +1,64 @@
 let transactions = [];
 let myChart;
-// build indexDB and sync?
-// TODO: inital sync if available?
-function setupLocalDB() {
-  const request = indexedDB.open('transactionsDB', 1);
-  request.onupgradeneeded = (e) => {
-    const db = e.target.result;
-    db.createObjectStore('transactions', { autoIncrement: true });
-  };
-}
-
-setupLocalDB();
 
 fetch('/api/transaction')
   .then((response) => response.json())
   .then((data) => {
     // save db data on global variable
     transactions = data;
+    setupLocalDB();
 
     populateTotal();
     populateTable();
     populateChart();
   });
+
+// build indexDB and sync?
+// TODO: inital sync if available?
+// function setupLocalDB() {
+//   const request = indexedDB.open('transactionsDB', 1);
+//   // build database if doesnt exist
+//   request.onupgradeneeded = (e) => {
+//     const db = e.target.result;
+//     db.createObjectStore('transactions', { autoIncrement: true });
+//   };
+//   // propgate with information off remote database
+//   request.onsuccess = (e) => {
+//     const db = e.target.result;
+//     // check local vs remote.
+//     const remoteTransactions = transactions;
+
+//     const localTransactions = db
+//       .transaction(['transactions'])
+//       .objectStore(['transactions'])
+//       .getAll();
+//     console.log('remote copy: ', remoteTransactions);
+//     console.log('local copy: ', localTransactions);
+//     if (localTransactions.result.length < remoteTransactions.length) {
+//       console.log('more records on remote, updating...');
+//     }
+//     if (localTransactions.result.length > remoteTransactions.length) {
+//       console.log('more records on local, updating...');
+//     }
+//   };
+// }
+async function setupLocalDB() {
+  const db = await idb.openDB('transactionsDB', 1, {
+    upgrade(db) {
+      db.createObjectStore('transactions', { autoIncrement: true });
+    },
+  });
+  // see whats on the db?
+  const allTransactions = await db.getAll('transactions');
+  console.log(allTransactions);
+
+  //     if (localTransactions.result.length < remoteTransactions.length) {
+  //       console.log('more records on remote, updating...');
+  //     }
+  //     if (localTransactions.result.length > remoteTransactions.length) {
+  //       console.log('more records on local, updating...');
+  //     }
+}
 
 function populateTotal() {
   // reduce transaction amounts to a single total value
