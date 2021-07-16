@@ -2,14 +2,15 @@ let transactions = [];
 let myChart;
 // build indexDB and sync?
 // TODO: inital sync if available?
-function setupLocalDB {
+function setupLocalDB() {
   const request = indexedDB.open('transactionsDB', 1);
   request.onupgradeneeded = (e) => {
     const db = e.target.result;
     db.createObjectStore('transactions', { autoIncrement: true });
-  }
+  };
 }
 
+setupLocalDB();
 
 fetch('/api/transaction')
   .then((response) => response.json())
