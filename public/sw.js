@@ -34,7 +34,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((cacheNames) =>
       Promise.all(
         cacheNames.map((cache) => {
-          if (cache !== cacheName) {
+          if (cache !== (cacheName || apiCache)) {
             console.log('Service Worker: Clearing Old Cache');
             return caches.delete(cache);
           }
