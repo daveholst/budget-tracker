@@ -13,18 +13,8 @@ let myChart;
 
 // setup indexDB database
 async function init() {
-  const remoteResponse = await getRemoteTransactions();
-  if (remoteResponse === undefined) {
-    const db = await idb.openDB('transactionsDB', 1, {
-      upgrade(db) {
-        db.createObjectStore('transactions', { autoIncrement: true });
-      },
-    });
-    transactions = await db.getAll('transactions');
-    db.close();
-  } else {
-    transactions = remoteResponse;
-  }
+  const response = await fetch('/api/transaction');
+  transactions = await response.json();
   setupLocalDB();
   populateTotal();
   populateTable();
@@ -33,21 +23,21 @@ async function init() {
 
 init();
 
-async function getRemoteTransactions() {
-  try {
-    const response = await fetch('/api/transaction');
-    const allTransactions = await response.json();
+// async function getRemoteTransactions() {
+//   try {
+//     const response = await fetch('/api/transaction');
+//     const allTransactions = await response.json();
 
-    console.log(allTransactions);
-    return allTransactions;
-  } catch (error) {
-    // console.error(error);
-    console.log('Unable to reach Remote DB. Going to Offline Mode');
-    return undefined;
-  }
-  // .then((response) => response.json())
-  // .then((data) => data);
-}
+//     console.log(allTransactions);
+//     return allTransactions;
+//   } catch (error) {
+//     // console.error(error);
+//     console.log('Unable to reach Remote DB. Going to Offline Mode');
+//     return undefined;
+//   }
+//   // .then((response) => response.json())
+//   // .then((data) => data);
+// }
 
 // build indexDB and sync?
 // TODO: inital sync if available?
@@ -73,21 +63,34 @@ async function setupLocalDB() {
   }
   if (allLocalTransactions.length > allRemoteTransactions.length) {
     console.log('more records on local, updating...');
-    // fetch('/api/transaction/bulk', {
-    //   method: 'POST',
-    //   body: JSON.stringify(transaction),
-    //   headers: {
-    //     Accept: 'application/json, text/plain, */*',
-    //     'Content-Type': 'application/json',
-    //   },
-    // });
+    const transactionsToUpload = allLocalTransactions.filter(
+      (trans) => !trans._id
+    );
+    fetch('/api/transaction/bulk', {
+      method: 'POST',
+      body: JSON.stringify(transactionsToUpload),
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
+      },
+    }).catch(async (err) => {
+      console.log('Unable to post to Remote Database. Using local Database');
+      transactions = await db.getAll('transactions');
+    });
   }
+  db.close();
 }
 
 // function to write to local if API unavailable!
 async function saveRecord(transaction) {
+  const db = await idb.openDB('transactionsDB', 1, {
+    upgrade(db) {
+      db.createObjectStore('transactions', { autoIncrement: true });
+    },
+  });
   await db.add('transactions', transaction);
   console.log('added transaction in offline mode');
+  db.close();
 }
 
 function populateTotal() {
