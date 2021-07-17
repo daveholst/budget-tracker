@@ -46,7 +46,8 @@ self.addEventListener('activate', (e) => {
 
 // call fetch event
 self.addEventListener('fetch', (e) => {
-  // console.log('Service Worker: Fetching');
+  // only apply to GET requests
+  if (e.request.method !== 'GET') return;
   // api calls
   if (e.request.url.includes('/api/')) {
     e.respondWith(

@@ -62,7 +62,6 @@ async function setupLocalDB() {
     const transactionsToUpload = allLocalTransactions.filter(
       (trans) => !trans._id
     );
-    console.log(transactionsToUpload);
     try {
       const response = await fetch('/api/transaction/bulk', {
         method: 'POST',
@@ -72,17 +71,9 @@ async function setupLocalDB() {
           'Content-Type': 'application/json',
         },
       });
-      if (response.status === 200) {
-        location.reload();
-      }
     } catch (error) {
-      const db = await idb.openDB('transactionsDB', 1, {
-        upgrade(db) {
-          db.createObjectStore('transactions', { autoIncrement: true });
-        },
-      });
+      console.log('Unable to post to Remote Database. Using local Database');
     }
-    console.log('Unable to post to Remote Database. Using local Database');
     transactions = allLocalTransactions;
   }
   db.close();
