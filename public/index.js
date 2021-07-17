@@ -1,8 +1,17 @@
+// register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('./sw.js')
+      .then((reg) => console.log('Service Worker: Registered'))
+      .catch((err) => console.log(`Service Worker: ${err}`));
+  });
+}
+
 let transactions = [];
 let myChart;
 
 // setup indexDB database
-
 
 fetch('/api/transaction')
   .then((response) => response.json())
@@ -121,7 +130,6 @@ function populateChart() {
   });
 }
 // function to save record locally to indexDB
-function saveRecord(transaction) {}
 
 function sendTransaction(isAdding) {
   const nameEl = document.querySelector('#t-name');
