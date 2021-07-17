@@ -26,6 +26,7 @@ async function init() {
     transactions = await db.getAll('transactions');
   }
   // make sure transactions array is sorted by date
+
   transactions = transactions.sort(
     (a, b) => new Date(b.date) - new Date(a.date)
   );
