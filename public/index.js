@@ -12,18 +12,42 @@ let transactions = [];
 let myChart;
 
 // setup indexDB database
+async function init() {
+  const remoteResponse = await getRemoteTransactions();
+  if (remoteResponse === undefined) {
+    const db = await idb.openDB('transactionsDB', 1, {
+      upgrade(db) {
+        db.createObjectStore('transactions', { autoIncrement: true });
+      },
+    });
+    transactions = await db.getAll('transactions');
+    db.close();
+  } else {
+    transactions = remoteResponse;
+  }
+  setupLocalDB();
+  populateTotal();
+  populateTable();
+  populateChart();
+}
 
-fetch('/api/transaction')
-  .then((response) => response.json())
-  .then((data) => {
-    // save db data on global variable
-    transactions = data;
-    setupLocalDB();
+init();
 
-    populateTotal();
-    populateTable();
-    populateChart();
-  });
+async function getRemoteTransactions() {
+  try {
+    const response = await fetch('/api/transaction');
+    const allTransactions = await response.json();
+
+    console.log(allTransactions);
+    return allTransactions;
+  } catch (error) {
+    // console.error(error);
+    console.log('Unable to reach Remote DB. Going to Offline Mode');
+    return undefined;
+  }
+  // .then((response) => response.json())
+  // .then((data) => data);
+}
 
 // build indexDB and sync?
 // TODO: inital sync if available?

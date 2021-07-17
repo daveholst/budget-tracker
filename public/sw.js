@@ -1,5 +1,5 @@
 const cacheName = 'static-files-v2';
-const API_CACHE_NAME = 'api-data-cache-v1';
+const apiCache = 'api-data-cache-v1';
 const cacheAssets = [
   '/',
   '/icons/icon-192x192.png',
@@ -47,6 +47,26 @@ self.addEventListener('activate', (e) => {
 // call fetch event
 self.addEventListener('fetch', (e) => {
   console.log('Service Worker: Fetching');
-  // check if live available
+  // api calls
+  if (e.request.url.includes('/api/')) {
+    e.respondWith(
+      caches
+        .open(apiCache)
+        .then((cache) =>
+          fetch(e.request)
+            .then((res) => {
+              if (res.status === 200) {
+                cache.put(e.request.url, res.clone());
+              }
+              return res;
+            })
+            .catch((err) => cache.match(e.request))
+        )
+        .catch((err) => console.error(err))
+    );
+    return;
+  }
+
+  // check if live files available else send cache
   e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
