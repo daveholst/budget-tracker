@@ -9,8 +9,6 @@ if ('serviceWorker' in navigator) {
 }
 
 let transactions = [];
-console.log('first', transactions);
-
 let myChart;
 
 // setup indexDB database
@@ -26,13 +24,8 @@ async function init() {
       },
     });
     transactions = await db.getAll('transactions');
-    // convert str to num
-    // transactions = transactions.map((tran) => ({
-    //   name: tran.name,
-    //   value: parseInt(tran.name),
-    //   date: tran.date,
-    // }));
   }
+  // make sure transactions array is sorted by date
   transactions = transactions.sort(
     (a, b) => new Date(b.date) - new Date(a.date)
   );
@@ -43,24 +36,7 @@ async function init() {
 
 init();
 
-// async function getRemoteTransactions() {
-//   try {
-//     const response = await fetch('/api/transaction');
-//     const allTransactions = await response.json();
-
-//     console.log(allTransactions);
-//     return allTransactions;
-//   } catch (error) {
-//     // console.error(error);
-//     console.log('Unable to reach Remote DB. Going to Offline Mode');
-//     return undefined;
-//   }
-//   // .then((response) => response.json())
-//   // .then((data) => data);
-// }
-
-// build indexDB and sync?
-// TODO: inital sync if available?
+// setup database and sync if required
 async function setupLocalDB() {
   const db = await idb.openDB('transactionsDB', 1, {
     upgrade(db) {
@@ -70,8 +46,6 @@ async function setupLocalDB() {
   // see whats on the db?
   const allLocalTransactions = await db.getAll('transactions');
   const allRemoteTransactions = transactions;
-  console.log('Local: ', allLocalTransactions);
-  console.log('Remote: ', allRemoteTransactions);
   if (allLocalTransactions.length <= allRemoteTransactions.length) {
     // update localDB to reflect remote
     console.log('more records on remote, updating...');
@@ -101,22 +75,12 @@ async function setupLocalDB() {
         location.reload();
       }
     } catch (error) {
-      console.error('bulk errer', error);
       const db = await idb.openDB('transactionsDB', 1, {
         upgrade(db) {
           db.createObjectStore('transactions', { autoIncrement: true });
         },
       });
-      transactions = await db.getAll('transactions');
-      populateTotal();
-      populateTable();
-      populateChart();
     }
-
-    // .then((res) => 'Updated the remote Database from Local')
-    // .catch((err) => {
-
-    // });
     console.log('Unable to post to Remote Database. Using local Database');
     transactions = allLocalTransactions;
   }

@@ -13,13 +13,13 @@ const cacheAssets = [
 ];
 // call Install Event
 self.addEventListener('install', (e) => {
-  console.log('Service Worker: Installed');
+  // console.log('Service Worker: Installed');
 
   e.waitUntil(
     caches
       .open(cacheName)
       .then((cache) => {
-        console.log('Service Worker: Caching Files');
+        // console.log('Service Worker: Caching Files');
         cache.addAll(cacheAssets);
       })
       .then(() => self.skipWaiting())
@@ -28,14 +28,14 @@ self.addEventListener('install', (e) => {
 
 // call Activate Event
 self.addEventListener('activate', (e) => {
-  console.log('Service Worker: Activated');
+  // console.log('Service Worker: Activated');
   // Remove unwanted caches
   e.waitUntil(
     caches.keys().then((cacheNames) =>
       Promise.all(
         cacheNames.map((cache) => {
           if (cache !== (cacheName || apiCache)) {
-            console.log('Service Worker: Clearing Old Cache');
+            // console.log('Service Worker: Clearing Old Cache');
             return caches.delete(cache);
           }
         })
@@ -46,7 +46,7 @@ self.addEventListener('activate', (e) => {
 
 // call fetch event
 self.addEventListener('fetch', (e) => {
-  console.log('Service Worker: Fetching');
+  // console.log('Service Worker: Fetching');
   // api calls
   if (e.request.url.includes('/api/')) {
     e.respondWith(
