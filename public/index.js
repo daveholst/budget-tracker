@@ -19,7 +19,38 @@ async function checkLocalDb() {
     },
   });
   const allLocalTransactions = await db.getAll('transactions');
+  db.close();
   return allLocalTransactions;
+}
+// clear local db
+async function clearLocalDb() {
+  const db = await idb.openDB('transactionsDB', 1, {
+    upgrade(db) {
+      db.createObjectStore('transactions', { autoIncrement: true });
+    },
+  });
+  await db.clear('transactions');
+  db.close();
+  console.log('Local Database Cleared');
+}
+
+// pushes local transaction to remote db
+async function pushLocalDb() {
+  try {
+    const allLocalTransactions = await checkLocalDb();
+    await fetch('/api/transaction/bulk', {
+      method: 'POST',
+      body: JSON.stringify(allLocalTransactions),
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('Local Transactions pushed to Remote Database');
+    clearLocalDb();
+  } catch (error) {
+    console.log('Remote Database Unreachable');
+  }
 }
 
 // initial code for fetch
@@ -35,7 +66,9 @@ fetch('/api/transaction')
       localDbData.forEach((trans) => {
         transactions.unshift(trans);
       });
+      pushLocalDb();
     }
+
     // build out site
     populateTotal();
     populateTable();
