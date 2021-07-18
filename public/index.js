@@ -7,77 +7,40 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.log(`Service Worker: ${err}`));
   });
 }
-
+// global variables
 let transactions = [];
 let myChart;
 
-// setup indexDB database
-async function init() {
-  try {
-    const response = await fetch('/api/transaction');
-    transactions = await response.json();
-    await setupLocalDB();
-  } catch (error) {
-    const db = await idb.openDB('transactionsDB', 1, {
-      upgrade(db) {
-        db.createObjectStore('transactions', { autoIncrement: true });
-      },
-    });
-    transactions = await db.getAll('transactions');
-  }
-  // make sure transactions array is sorted by date
-
-  transactions = transactions.sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
-  );
-  populateTotal();
-  populateTable();
-  populateChart();
-}
-
-init();
-
-// setup database and sync if required
-async function setupLocalDB() {
+// checks local database for transactions
+async function checkLocalDb() {
   const db = await idb.openDB('transactionsDB', 1, {
     upgrade(db) {
       db.createObjectStore('transactions', { autoIncrement: true });
     },
   });
-  // see whats on the db?
   const allLocalTransactions = await db.getAll('transactions');
-  const allRemoteTransactions = transactions;
-  if (allLocalTransactions.length <= allRemoteTransactions.length) {
-    // update localDB to reflect remote
-    console.log('more records on remote, updating...');
-    // clear db out
-    await db.clear('transactions');
-    // add new data back in
-    allRemoteTransactions.forEach(async (transaction) => {
-      await db.add('transactions', transaction);
-    });
-  }
-  if (allLocalTransactions.length > allRemoteTransactions.length) {
-    console.log('more records on local, updating...');
-    const transactionsToUpload = allLocalTransactions.filter(
-      (trans) => !trans._id
-    );
-    try {
-      const response = await fetch('/api/transaction/bulk', {
-        method: 'POST',
-        body: JSON.stringify(transactionsToUpload),
-        headers: {
-          Accept: 'application/json, text/plain, */*',
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.log('Unable to post to Remote Database. Using local Database');
-    }
-    transactions = allLocalTransactions;
-  }
-  db.close();
+  return allLocalTransactions;
 }
+
+// initial code for fetch
+fetch('/api/transaction')
+  .then((response) => response.json())
+  .then(async (data) => {
+    // save db data on global variable
+    transactions = data;
+    // check if anything exist on localDb
+    const localDbData = await checkLocalDb();
+    // if local data exists add to global transactions
+    if (localDbData) {
+      localDbData.forEach((trans) => {
+        transactions.unshift(trans);
+      });
+    }
+    // build out site
+    populateTotal();
+    populateTable();
+    populateChart();
+  });
 
 // function to write to local if API unavailable!
 async function saveRecord(transaction) {

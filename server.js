@@ -18,7 +18,8 @@ app.use(express.json());
 app.use(express.static('public'));
 
 mongoose.connect(
-  process.env.MONGODB_URI || 'mongodb://budget:budget@localhost/budget',
+  // process.env.MONGODB_URI || 'mongodb://budget:budget@localhost/budget',
+  'mongodb://budget:budget@localhost/budget',
   {
     useNewUrlParser: true,
     useFindAndModify: false,
